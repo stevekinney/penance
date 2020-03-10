@@ -6,12 +6,13 @@ const Application = () => {
   const [badThings, setBadThings] = React.useState([]);
 
   const addBadThing = ({ badThing }) => {
+    console.log('addBadThing', badThing);
     setBadThings([{ id: uniqueId(), value: badThing }, ...badThings]);
   };
 
   return (
     <main>
-      <h1>Bad Things I've Done</h1>
+      <h1 className="wow">Bad Things I've Done</h1>
       <NewBadThing onSubmit={addBadThing} />
       {badThings.map(thing => (
         <p key={thing.id}>{thing.value}</p>

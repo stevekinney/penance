@@ -258,6 +258,158 @@ This will add a comment as the first child to every element. This is helpful to 
 
 So, in this case, I _want_ React to add comments, which is not something is does out of the box.
 
+### What About Events?
+
+Events might have been easier before functional components and definitely easier before Hooks. But here we are. It's 2020 and I have to write a hack to make this both work and be at all readible.
+
+```js
+const addEventListener = (element, eventType, listener) => {
+  element.__hackyEventCache = element.__hackyEventCache || {};
+  element.removeEventListener(eventType, element.__hackyEventCache[eventType]);
+  element.addEventListener(eventType, listener);
+  element.__hackyEventCache[eventType] = listener;
+};
+```
+
+Basically, I'm just jamming an object onto the element in order to keep track of which event listeners are on it. I'm adding and replacing the event listeners. Sure, is there something more clever I could do. Yea, but it's besides the point.
+
+```js
+const addEventListener = (element, eventType, listener) => {
+  element.__hackyEventCache = element.__hackyEventCache || {};
+  element.removeEventListener(eventType, element.__hackyEventCache[eventType]);
+  element.addEventListener(eventType, listener);
+  element.__hackyEventCache[eventType] = listener;
+};
+```
+
+Now, if it's one of the change handlers that we need, we'll add the event listener.
+
+```js
+createInstance: (
+    type,
+    props,
+    rootContainerInstance,
+    hostContext,
+    internalInstanceHandle
+  ) => {
+    const element = document.createElement(type);
+
+    for (const [prop, value] of Object.entries(props)) {
+      if (prop === 'children') continue;
+
+      if (typeof value === 'string') {
+        element[prop] = value;
+        continue;
+      }
+    }
+
+    if (props.onSubmit) {
+      addEventListener(element, 'submit', props.onSubmit);
+    }
+
+    if (props.onChange) {
+      addEventListener(element, 'keyup', props.onChange);
+    }
+
+    const comment = document.createComment('An important insight!');
+    element.appendChild(comment);
+
+    return element;
+  },
+```
+
+### Teaching Our React How to Modify the DOM
+
+```js
+{
+  //...
+  createTextInstance(text) {
+    return document.createTextNode(text.toUpperCase());
+  },
+  appendChildToContainer(container, child) {
+    container.appendChild(child);
+  },
+  appendChild(parent, child) {
+    parent.appendChild(child);
+  },
+  appendInitialChild(parent, child) {
+    parent.appendChild(child);
+  },
+  removeChildFromContainer(container, child) {
+    container.removeChild(child);
+  },
+  removeChild(parent, child) {
+    parent.removeChild(child);
+  },
+  insertInContainerBefore(container, child, before) {
+    container.insertBefore(child, before);
+  },
+  insertBefore(parent, child, before) {
+    parent.insertBefore(child, before);
+  },
+  //...
+}
+```
+
+### Preparing and Committing Updates
+
+The short version here is that this is kind of where the virtual DOM magick happens.
+
+We're going to see what's changed between the old props and the new props to figure out if we need to rerender. If we return a truthy value, then it'll try to make those changes—otherwise, we'll try to skip it.
+
+#### Preparing
+
+```js
+prepareUpdate(
+    instance,
+    type,
+    oldProps,
+    newProps,
+    rootContainerInstance,
+    currentHostContext
+  ) {
+    const propKeys = uniq(Object.keys(newProps).concat(Object.keys(oldProps)));
+
+    const payload = {};
+
+    for (let key of propKeys) {
+      if (key === 'children') continue;
+      if (oldProps[key] !== newProps[key]) {
+        payload[key] = newProps[key];
+      }
+    }
+
+    if (Object.keys(payload).length) return payload;
+  },
+```
+
+#### Committing
+
+```js
+commitUpdate(
+  instance,
+  updatePayload,
+  type,
+  oldProps,
+  newProps,
+  finishedWork
+) {
+  for (const [prop, value] of Object.entries(updatePayload)) {
+    if (prop === 'onChange') {
+      addEventListener(instance, 'keyup', value);
+      continue;
+    }
+
+    if (prop === 'onSubmit') {
+      addEventListener(instance, 'submit', value);
+      continue;
+    }
+
+    instance[prop] = value;
+  }
+},
+```
+
 ## Further Reading
 
 - [Building a simple custom renderer to DOM](https://medium.com/@agent_hunt/hello-world-custom-react-renderer-9a95b7cd04bc)
