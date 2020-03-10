@@ -6,7 +6,7 @@ There is a lot to React.
 
 But also: React is a lot of things to a lot of different people, right? Classically, React targets the browser. But, we know that there is React Native as well, right? You can use React to render to PDF.
 
-Hell—you can even use React to control hardware.
+You can even use React to control hardware.
 
 Let's be real honest with each other. I'd love to tell you that we could write all of ReactDOM in like 20 minutes together.
 
@@ -18,6 +18,7 @@ That's not going to happen. But, in this talk: I'd like to do the following:
 - Go through the high-level basics: Talks like this are always a tricky balancing act because:
   1. You're never going to _actually_ learn this until you do it.
   2. Watching me get _really_ into the weeds is going to be a nightmare.
+- Get a better understanding of how React does it's thing under the hood.
 
 ## Background
 
@@ -25,8 +26,7 @@ When I was a kid, React and ReactDOM were one in the same. But, when React Nativ
 
 There were core parts of React that were common regardless of what platform you were targeting (e.g. state management).
 
-- Function components
-- Class components
+- Custom components (of the class-based and function-based variety)
 - `props` and `state`
 - Hooks (e.g. `useState`)
 - Context API
@@ -52,6 +52,8 @@ Stuff changes, so we mutate the DOM. This is mutation mode. It's what we know an
 const div = document.createElement('div');
 div.style.color = 'red'; // mutation
 ```
+
+This is also the one that we're going to be playing with today.
 
 ### Persistent Mode
 
@@ -82,14 +84,14 @@ const hostConfig = {
 
 const reconciler = Reconciler(hostConfig);
 
-const RendererPublicAPI = {
+const NotReactDOM = {
   render(component, rootElement, callback) {
     const container = reconciler.createContainer(rootElement, false, false);
     reconciler.updateContainer(component, container, null, null);
   }
 };
 
-export default RendererPublicAPI;
+export default NotReactDOM;
 ```
 
 So, whats the difference between `element` and `container`?
@@ -251,7 +253,7 @@ This will add a comment as the first child to every element. This is helpful to 
 ```html
 <!-- [if (gte mso 9) | (IE)]>
 <style>
-     /*Your styles here*/
+     /* Your styles here */
 </style>
 <![endif] -->
 ```
