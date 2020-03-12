@@ -416,3 +416,4 @@ commitUpdate(
 
 - [Building a simple custom renderer to DOM](https://medium.com/@agent_hunt/hello-world-custom-react-renderer-9a95b7cd04bc)
 - [Building a simple custom renderer to native](https://medium.com/@agent_hunt/introduction-to-react-native-renderers-aka-react-native-is-the-java-and-react-native-renderers-are-828a0022f433)
+- [Awesome React Renderer](https://github.com/chentsulin/awesome-react-renderer)
